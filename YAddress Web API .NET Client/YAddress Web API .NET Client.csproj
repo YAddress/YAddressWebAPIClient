@@ -14,4 +14,8 @@
     <Copyright>(C) 2020 YAddress.net</Copyright>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="README.md" />
+  </ItemGroup>
+
 </Project>
