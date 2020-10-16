@@ -7,7 +7,7 @@
     <Authors>YAddress.net</Authors>
     <Company>YAddress.net</Company>
     <Product>YAddress.net</Product>
-    <Description>.NET client for YAddress Web API:postal address correction, validation, standardization and geocoding.</Description>
+    <Description>.NET client for YAddress Web API: postal address correction, validation, standardization and geocoding.</Description>
     <RepositoryUrl>https://github.com/YAddress/YAddressWebApiClient</RepositoryUrl>
     <PackageProjectUrl>https://github.com/YAddress/YAddressWebApiClient</PackageProjectUrl>
     <Version>1.2.0</Version>
