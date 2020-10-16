@@ -44,6 +44,7 @@ namespace YAddress
             public int? TimeZoneOffset { get; set; }
             public bool? DstObserved { get; set; }
             public decimal? SalesTaxRate { get; set; }
+            public string SalesTaxJurisdiction { get; set; }
         }
 
         /// Private variables
@@ -76,7 +77,7 @@ namespace YAddress
                 _http.BaseAddress = new Uri("https://www.yaddress.net/api/");
                 _http.DefaultRequestHeaders.Clear();
                 _http.DefaultRequestHeaders.Add("Accept", "application/json");
-                _http.DefaultRequestHeaders.Add("User-Agent", "YAddress Web API .NET Client 1.1.0");
+                _http.DefaultRequestHeaders.Add("User-Agent", "YAddressWebApiDotNetClient/1.2.0");
             }
 
             // Call Web API
