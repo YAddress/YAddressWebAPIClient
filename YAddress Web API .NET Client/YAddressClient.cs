@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Runtime.Serialization.Json;
 using System.Web;
+using System.Reflection;
 
 namespace YAddress
 {
@@ -44,18 +45,26 @@ namespace YAddress
             public int? TimeZoneOffset { get; set; }
             public bool? DstObserved { get; set; }
             public decimal? SalesTaxRate { get; set; }
-            public string SalesTaxJurisdiction { get; set; }
+            public int? SalesTaxJurisdiction { get; set; }
         }
 
         /// Private variables
         HttpClient _http = null;
 
         /// Constructor
-        public void Client()
+        public WebApiClient()
         {
+            // Instantiate Http client 
+            _http = new HttpClient();
+            _http.BaseAddress = new Uri("https://www.yaddress.net/api/");
+            _http.DefaultRequestHeaders.Clear();
+            _http.DefaultRequestHeaders.Add("Accept", "application/json");
+            Version v = typeof(WebApiClient).Assembly.GetName().Version;
+            _http.DefaultRequestHeaders.Add("User-Agent", 
+                $"YAddressWebApiDotNetClient/{v.Major}.{v.Minor}.{v.Revision}");
         }
 
-        /// Implementation if IDisposable
+        /// Implementation of IDisposable
         public void Dispose()
         {
             _http?.Dispose();
@@ -70,16 +79,6 @@ namespace YAddress
         public async Task<Address> ProcessAddressAsync(
             string AddressLine1, string AddressLine2, string UserKey = null)
         {
-            // Instantiate Http client if not yet
-            if (_http == null)
-            {
-                _http = new HttpClient();
-                _http.BaseAddress = new Uri("https://www.yaddress.net/api/");
-                _http.DefaultRequestHeaders.Clear();
-                _http.DefaultRequestHeaders.Add("Accept", "application/json");
-                _http.DefaultRequestHeaders.Add("User-Agent", "YAddressWebApiDotNetClient/1.2.0");
-            }
-
             // Call Web API
             HttpResponseMessage res = await _http.GetAsync(
                 $"Address?AddressLine1={HttpUtility.UrlEncode(AddressLine1)}" +
