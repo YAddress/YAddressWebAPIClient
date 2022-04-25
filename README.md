@@ -12,11 +12,11 @@ Find more about YAddress Web API at http://www.yaddress.net/WebApi
 ## How To Use
 ```csharp
 // Instantiate client
-YAddress.Client client = new YAddress.Client();
+YAddress.Client client = new YAddress.Client(UserKey: null);
 
 // Process address
 YAddress.Client.Address adr = 
-    client.ProcessAddress("506 Fourth Avenue Unit 1", "Asbury Prk, NJ", null);
+    client.ProcessAddress("506 Fourth Avenue Unit 1", "Asbury Prk, NJ");
 
 // Print out the results
 Console.WriteLine("ErrorCode: " + adr.ErrorCode);
