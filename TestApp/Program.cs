@@ -6,9 +6,9 @@ namespace TestApp
     {
         static void Main()
         {
-            YAddress.WebApiClient client = new YAddress.WebApiClient();
+            YAddress.WebApiClient client = new YAddress.WebApiClient(null);
             YAddress.WebApiClient.Address adr = 
-                client.ProcessAddress("506 Fourth Avenue # 1", "Asbury Prk, NJ", null);
+                client.ProcessAddress("506 Fourth Avenue # 1", "Asbury Prk, NJ");
         }
     }
 }

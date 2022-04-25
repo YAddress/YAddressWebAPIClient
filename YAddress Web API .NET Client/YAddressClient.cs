@@ -1,11 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Runtime.Serialization.Json;
 using System.Web;
-using System.Reflection;
 
 namespace YAddress
 {
@@ -49,41 +47,51 @@ namespace YAddress
         }
 
         /// Private variables
-        HttpClient _http = null;
+        static readonly HttpClient _http = new HttpClient();
+        string _sBaseUrl, _sUserKey;
+        const string _sStandardBaseUrl = "http://www.yaddress.net/api/";
 
+        /// <summary>
         /// Constructor
-        public WebApiClient()
+        /// Initializes a new WebApiClient instance.
+        /// </summary>
+        /// <param name="UserKey">Your YAddress Web API user key. Use null if you do not have a YAddress account.</param>
+        /// <param name="BaseUrl">Optional. Base URL for API calls if different than standard.</param>
+        public WebApiClient(string UserKey, string BaseUrl = null)
         {
-            // Instantiate Http client 
-            _http = new HttpClient();
-            _http.BaseAddress = new Uri("https://www.yaddress.net/api/");
-            _http.DefaultRequestHeaders.Clear();
-            _http.DefaultRequestHeaders.Add("Accept", "application/json");
-            Version v = typeof(WebApiClient).Assembly.GetName().Version;
-            _http.DefaultRequestHeaders.Add("User-Agent", 
-                $"YAddressWebApiDotNetClient/{v.Major}.{v.Minor}.{v.Revision}");
+            // Initialize Http client headers
+            if (_http.DefaultRequestHeaders.Accept.Count == 0)
+            {
+                _http.DefaultRequestHeaders.Add("Accept", "application/json");
+                Version v = typeof(WebApiClient).Assembly.GetName().Version;
+                _http.DefaultRequestHeaders.Add("User-Agent",
+                    $"YAddressWebApiDotNetClient/{v.Major}.{v.Minor}.{v.Revision}");
+            }
+
+            // Save vars
+            _sUserKey = UserKey;
+            _sBaseUrl = BaseUrl ?? _sStandardBaseUrl;
         }
 
         /// Implementation of IDisposable
         public void Dispose()
         {
-            _http?.Dispose();
         }
 
         /// <summary>
         /// Calls YAddress Web API to process a postal address.
         /// </summary>
-        /// <param name="AddressLine1">First line of the address, i.e., street address.</param>
-        /// <param name="AddressLine2">Second line of the address, i.e., city, state, zip.</param>
-        /// <param name="UserKey">Your YAddress Web API user key. Use null if you do not have a YAddress account.</param>
+        /// <param name="AddressLine1">First line of the address -- street address.</param>
+        /// <param name="AddressLine2">Second line of the address -- city, state, zip.</param>
         public async Task<Address> ProcessAddressAsync(
-            string AddressLine1, string AddressLine2, string UserKey = null)
+            string AddressLine1, string AddressLine2)
         {
             // Call Web API
             HttpResponseMessage res = await _http.GetAsync(
-                $"Address?AddressLine1={HttpUtility.UrlEncode(AddressLine1)}" +
+                _sBaseUrl +
+                    $"Address?AddressLine1={HttpUtility.UrlEncode(AddressLine1)}" +
                     $"&AddressLine2={HttpUtility.UrlEncode(AddressLine2)}" +
-                    $"&UserKey={UserKey}");
+                    $"&UserKey={_sUserKey}");
             Stream st = await res.Content.ReadAsStreamAsync();
 
             // Deserialize JSON
@@ -105,13 +113,12 @@ namespace YAddress
         /// <summary>
         /// Calls YAddress Web API to process a postal address.
         /// </summary>
-        /// <param name="AddressLine1">First line of the address, i.e., street address.</param>
-        /// <param name="AddressLine2">Second line of the address, i.e., city, state, zip.</param>
-        /// <param name="UserKey">Your YAddress Web API user key. Use null if you do not have a YAddress account.</param>
+        /// <param name="AddressLine1">First line of the address -- street address.</param>
+        /// <param name="AddressLine2">Second line of the address -- city, state, zip.</param>
         public Address ProcessAddress(
-            string AddressLine1, string AddressLine2, string UserKey = null)
+            string AddressLine1, string AddressLine2)
         {
-            Task<Address> tsk = ProcessAddressAsync(AddressLine1, AddressLine2, UserKey);
+            Task<Address> tsk = ProcessAddressAsync(AddressLine1, AddressLine2);
             tsk.Wait();
             return tsk.Result;
         }
