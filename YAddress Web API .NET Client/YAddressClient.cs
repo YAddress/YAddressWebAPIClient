@@ -43,7 +43,7 @@ namespace YAddress
             public int? TimeZoneOffset { get; set; }
             public bool? DstObserved { get; set; }
             public int? PlaceFP { get; set; }
-            public string CityMunucipality { get; set; }
+            public string CityMunicipality { get; set; }
             public decimal? SalesTaxRate { get; set; }
             public int? SalesTaxJurisdiction { get; set; }
         }
@@ -57,7 +57,7 @@ namespace YAddress
         /// Initializes a new WebApiClient instance.
         /// </summary>
         /// <param name="UserKey">Your YAddress Web API user key. Use null if you do not have a YAddress account.</param>
-        /// <param name="BaseUrl">Optional. Base URL for API calls if different than standard.</param>
+        /// <param name="BaseUrl">Optional. Base URL for API calls if different than http://www.yaddress.net/api/.</param>
         public WebApiClient(string UserKey, 
             string BaseUrl = "http://www.yaddress.net/api/")
         {
@@ -73,6 +73,8 @@ namespace YAddress
             // Save vars
             _sUserKey = UserKey;
             _sBaseUrl = BaseUrl;
+            if (!_sBaseUrl.EndsWith("/"))
+                _sBaseUrl += "/";
         }
 
         /// Implementation of IDisposable
