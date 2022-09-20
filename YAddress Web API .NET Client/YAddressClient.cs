@@ -57,9 +57,9 @@ namespace YAddress
         /// Initializes a new WebApiClient instance.
         /// </summary>
         /// <param name="UserKey">Your YAddress Web API user key. Use null if you do not have a YAddress account.</param>
-        /// <param name="BaseUrl">Optional. Base URL for API calls if different than http://www.yaddress.net/api/.</param>
+        /// <param name="BaseUrl">Optional. Base URL for API calls if different than http://www.yaddress.net/api.</param>
         public WebApiClient(string UserKey, 
-            string BaseUrl = "http://www.yaddress.net/api/")
+            string BaseUrl = "http://www.yaddress.net/api")
         {
             // Initialize Http client headers
             if (_http.DefaultRequestHeaders.Accept.Count == 0)
@@ -72,9 +72,7 @@ namespace YAddress
 
             // Save vars
             _sUserKey = UserKey;
-            _sBaseUrl = BaseUrl;
-            if (!_sBaseUrl.EndsWith("/"))
-                _sBaseUrl += "/";
+            _sBaseUrl = BaseUrl?.TrimEnd('/');
         }
 
         /// Implementation of IDisposable
@@ -91,11 +89,21 @@ namespace YAddress
             string AddressLine1, string AddressLine2)
         {
             // Call Web API
-            HttpResponseMessage res = await _http.GetAsync(
-                _sBaseUrl +
-                    $"Address?AddressLine1={HttpUtility.UrlEncode(AddressLine1)}" +
+            HttpResponseMessage res;
+            try
+            {
+                res = await _http.GetAsync(
+                    $"{_sBaseUrl}/Address" +
+                    $"?AddressLine1={HttpUtility.UrlEncode(AddressLine1)}" +
                     $"&AddressLine2={HttpUtility.UrlEncode(AddressLine2)}" +
                     $"&UserKey={_sUserKey}");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("YAddress Web API call failed.", ex);
+            }
+            if (res.StatusCode != System.Net.HttpStatusCode.OK)
+                throw new Exception($"YAddress Web API call failed. HTTP response code: {(int)res.StatusCode}");
             Stream st = await res.Content.ReadAsStreamAsync();
 
             // Deserialize JSON
