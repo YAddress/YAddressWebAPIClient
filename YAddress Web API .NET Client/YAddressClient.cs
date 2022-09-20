@@ -42,6 +42,8 @@ namespace YAddress
             public int GeoPrecision { get; set; }
             public int? TimeZoneOffset { get; set; }
             public bool? DstObserved { get; set; }
+            public int? PlaceFP { get; set; }
+            public string CityMunucipality { get; set; }
             public decimal? SalesTaxRate { get; set; }
             public int? SalesTaxJurisdiction { get; set; }
         }
@@ -49,7 +51,6 @@ namespace YAddress
         /// Private variables
         static readonly HttpClient _http = new HttpClient();
         string _sBaseUrl, _sUserKey;
-        const string _sStandardBaseUrl = "http://www.yaddress.net/api/";
 
         /// <summary>
         /// Constructor
@@ -57,7 +58,8 @@ namespace YAddress
         /// </summary>
         /// <param name="UserKey">Your YAddress Web API user key. Use null if you do not have a YAddress account.</param>
         /// <param name="BaseUrl">Optional. Base URL for API calls if different than standard.</param>
-        public WebApiClient(string UserKey, string BaseUrl = null)
+        public WebApiClient(string UserKey, 
+            string BaseUrl = "http://www.yaddress.net/api/")
         {
             // Initialize Http client headers
             if (_http.DefaultRequestHeaders.Accept.Count == 0)
@@ -70,7 +72,7 @@ namespace YAddress
 
             // Save vars
             _sUserKey = UserKey;
-            _sBaseUrl = BaseUrl ?? _sStandardBaseUrl;
+            _sBaseUrl = BaseUrl;
         }
 
         /// Implementation of IDisposable
