@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Runtime.Serialization.Json;
 using System.Web;
+using System.Text.Json;
 
 namespace YAddress
 {
@@ -46,6 +47,7 @@ namespace YAddress
             public string CityMunicipality { get; set; }
             public decimal? SalesTaxRate { get; set; }
             public int? SalesTaxJurisdiction { get; set; }
+            public string UspsCarrierRoute { get; set; }
         }
 
         /// Private variables
@@ -89,10 +91,10 @@ namespace YAddress
             string AddressLine1, string AddressLine2)
         {
             // Call Web API
-            HttpResponseMessage res;
+            string sResponse;
             try
             {
-                res = await _http.GetAsync(
+                sResponse = await _http.GetStringAsync(
                     $"{_sBaseUrl}/Address" +
                     $"?AddressLine1={HttpUtility.UrlEncode(AddressLine1)}" +
                     $"&AddressLine2={HttpUtility.UrlEncode(AddressLine2)}" +
@@ -102,22 +104,17 @@ namespace YAddress
             {
                 throw new Exception("YAddress Web API call failed.", ex);
             }
-            if (res.StatusCode != System.Net.HttpStatusCode.OK)
-                throw new Exception($"YAddress Web API call failed. HTTP response code: {(int)res.StatusCode}");
-            Stream st = await res.Content.ReadAsStreamAsync();
 
             // Deserialize JSON
-            var serializer = new DataContractJsonSerializer(typeof(Address));
             Address adr;
             try
             {
-                adr = (Address)serializer.ReadObject(st);
+                adr = JsonSerializer.Deserialize<Address>(sResponse);
             }
             catch(Exception ex)
             {
                 throw new Exception("Error parsing response from server", ex);
             }
-            st.Close();
 
             return adr;
         }
@@ -130,9 +127,7 @@ namespace YAddress
         public Address ProcessAddress(
             string AddressLine1, string AddressLine2)
         {
-            Task<Address> tsk = ProcessAddressAsync(AddressLine1, AddressLine2);
-            tsk.Wait();
-            return tsk.Result;
+            return ProcessAddressAsync(AddressLine1, AddressLine2).Result;
         }
     }
 }

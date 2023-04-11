@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>YAddressWebApiClient</PackageId>
     <Authors>YAddress.net</Authors>
@@ -10,8 +10,8 @@
     <Description>.NET client for YAddress Web API: postal address correction, validation, standardization and geocoding.</Description>
     <RepositoryUrl>https://github.com/YAddress/YAddressWebApiClient</RepositoryUrl>
     <PackageProjectUrl>https://github.com/YAddress/YAddressWebApiClient</PackageProjectUrl>
-    <Version>1.5.2</Version>
-    <Copyright>(C) 2022 YAddress.net</Copyright>
+    <Version>1.6.0</Version>
+    <Copyright>(C) 2023 YAddress.net</Copyright>
     <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <RepositoryType>Git</RepositoryType>
     <PackageReadmeFile>README.md</PackageReadmeFile>
