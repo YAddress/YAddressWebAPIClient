@@ -1,8 +1,6 @@
 ﻿using System;
-using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Runtime.Serialization.Json;
 using System.Web;
 using System.Text.Json;
 
@@ -29,6 +27,7 @@ namespace YAddress
             public string PostDir { get; set; }
             public string Sec { get; set; }
             public string SecNumber { get; set; }
+            public bool? SecValidated { get; set; }
             public string City { get; set; }
             public string State { get; set; }
             public string Zip { get; set; }
