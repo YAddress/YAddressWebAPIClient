@@ -68,7 +68,7 @@ namespace YAddress
                 _http.DefaultRequestHeaders.Add("Accept", "application/json");
                 Version v = typeof(WebApiClient).Assembly.GetName().Version;
                 _http.DefaultRequestHeaders.Add("User-Agent",
-                    $"YAddressWebApiDotNetClient/{v.Major}.{v.Minor}.{v.Revision}");
+                    $"YAddressWebApiDotNetClient/{v.Major}.{v.Minor}.{v.Build}");
             }
 
             // Save vars
