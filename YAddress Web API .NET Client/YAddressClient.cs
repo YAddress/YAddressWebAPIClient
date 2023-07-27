@@ -2,7 +2,7 @@
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
-using System.Text.Json;
+using SimpleJSON;
 
 namespace YAddress
 {
@@ -105,17 +105,49 @@ namespace YAddress
             }
 
             // Deserialize JSON
-            Address adr;
             try
             {
-                adr = JsonSerializer.Deserialize<Address>(sResponse);
+                JSONNode nd = JSONNode.Parse(sResponse);
+                Address adr = new Address();
+
+                adr.ErrorCode = nd["ErrorCode"].AsInt;
+                adr.ErrorMessage = nd["ErrorMessage"].AsString;
+                adr.AddressLine1 = nd["AddressLine1"].AsString;
+                adr.AddressLine2 = nd["AddressLine2"].AsString;
+                adr.Number = nd["Number"].AsString;
+                adr.PreDir = nd["PreDir"].AsString;
+                adr.Street = nd["Street"].AsString;
+                adr.Suffix = nd["Suffix"].AsString;
+                adr.PostDir = nd["PostDir"].AsString;
+                adr.Sec = nd["Sec"].AsString;
+                adr.SecNumber = nd["SecNumber"].AsString;
+                adr.SecValidated = nd["SecValidated"].AsNullableBool;
+                adr.City = nd["City"].AsString;
+                adr.State = nd["State"].AsString;
+                adr.Zip = nd["Zip"].AsString;
+                adr.Zip4 = nd["Zip4"].AsString;
+                adr.County = nd["County"].AsString;
+                adr.StateFP = nd["StateFP"].AsString;
+                adr.CountyFP = nd["CountyFP"].AsString;
+                adr.CensusBlock = nd["CensusBlock"].AsString;
+                adr.CensusTract = nd["CensusTract"].AsString;
+                adr.Latitude = nd["Latitude"].AsDouble;
+                adr.Longitude = nd["Longitude"].AsDouble;
+                adr.GeoPrecision = nd["GeoPrecision"].AsInt;
+                adr.TimeZoneOffset = nd["TimeZoneOffset"].AsNullableInt;
+                adr.DstObserved = nd["DstObserved"].AsNullableBool;
+                adr.PlaceFP = nd["PlaceFP"].AsNullableInt;
+                adr.CityMunicipality = nd["CityMunicipality"].AsString;
+                adr.SalesTaxRate = nd["SalesTaxRate"].AsNullableDecimal;
+                adr.SalesTaxJurisdiction = nd["SalesTaxJurisdiction"].AsNullableInt;
+                adr.UspsCarrierRoute = nd["UspsCarrierRoute"].AsString;
+
+                return adr;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new Exception("Error parsing response from server", ex);
             }
-
-            return adr;
         }
 
         /// <summary>
