@@ -26,18 +26,7 @@
  * - provides a common interface for each node so no explicit casting is required.
  * - the parser try to avoid errors, but if malformed JSON is parsed the result is undefined
  * 
- * 
- * 2012-12-17 Update:
- * - Added internal JSONLazyCreator class which simplifies the construction of a JSON tree
- *   Now you can simple reference any item that doesn't exist yet and it will return a JSONLazyCreator
- *   The class determines the required type by it's further use, creates the type and removes itself.
- * - Added binary serialization / deserialization.
- * - Added support for BZip2 zipped binary format. Requires the SharpZipLib ( http://www.icsharpcode.net/opensource/sharpziplib/ )
- *   The usage of the SharpZipLib library can be disabled by removing or commenting out the USE_SharpZipLib define at the top
- * - The serializer uses different types when it comes to store the values. Since my data values
- *   are all of type string, the serializer will "try" which format fits best. The order is: int, float, double, bool, string.
- *   It's not the most efficient way but for a moderate amount of data it should work on all platforms.
- * 
+
  * * * * */
 using System;
 using System.Collections;
@@ -301,8 +290,6 @@ namespace SimpleJSON
 
         public static bool operator ==(JSONNode a, object b)
         {
-            if (b == null && a is JSONLazyCreator)
-                return true;
             return ReferenceEquals(a, b);
         }
 
@@ -492,18 +479,8 @@ namespace SimpleJSON
                             throw new Exception("JSON Parse: Too many closing brackets");
 
                         stack.Pop();
-                        if (token.Length != 0)
-                        {
-                            tokenName = tokenName.Trim();
-                            /*
-                            if (ctx is JSONArray)
-                                ctx.Add (Token);
-                            else if (TokenName != "")
-                                ctx.Add (TokenName, Token);
-                                */
-                            AddElement(ctx, token.ToString(), tokenName, tokenIsString);
-                            tokenIsString = false;
-                        }
+                        AddElement(ctx, token.ToString(), tokenName, tokenIsString);
+                        tokenIsString = false;
                         tokenName = "";
                         token = new StringBuilder();
                         if (stack.Count > 0)
@@ -534,18 +511,8 @@ namespace SimpleJSON
                             token.Append(currentChar);
                             break;
                         }
-                        if (token.Length != 0)
-                        {
-                            /*
-                            if (ctx is JSONArray) {
-                                ctx.Add (Token);
-                            } else if (TokenName != "") {
-                                ctx.Add (TokenName, Token);
-                            }
-                            */
-                            AddElement(ctx, token.ToString(), tokenName, tokenIsString);
-                            tokenIsString = false;
-                        }
+                        AddElement(ctx, token.ToString(), tokenName, tokenIsString);
+                        tokenIsString = false;
                         tokenName = "";
                         token = new StringBuilder();
                         tokenIsString = false;
@@ -683,76 +650,6 @@ namespace SimpleJSON
             Serialize(w);
         }
 
-#if USE_SharpZipLib
-		public void SaveToCompressedStream(System.IO.Stream aData)
-		{
-			using (var gzipOut = new ICSharpCode.SharpZipLib.BZip2.BZip2OutputStream(aData))
-			{
-				gzipOut.IsStreamOwner = false;
-				SaveToStream(gzipOut);
-				gzipOut.Close();
-			}
-		}
-
-		public void SaveToCompressedFile(string aFileName)
-		{
-		
-#if USE_FileIO
-			System.IO.Directory.CreateDirectory((new System.IO.FileInfo(aFileName)).Directory.FullName);
-			using(var F = System.IO.File.OpenWrite(aFileName))
-			{
-				SaveToCompressedStream(F);
-			}
-		
-#else
-			throw new Exception("Can't use File IO stuff in webplayer");
-#endif
-		}
-		public string SaveToCompressedBase64()
-		{
-			using (var stream = new System.IO.MemoryStream())
-			{
-				SaveToCompressedStream(stream);
-				stream.Position = 0;
-				return System.Convert.ToBase64String(stream.ToArray());
-			}
-		}
-		
-#else
-        public void SaveToCompressedStream(Stream aData)
-        {
-            throw new Exception(
-                "Can't use compressed functions. You need include the SharpZipLib and uncomment the define at the top of SimpleJSON");
-        }
-
-        public void SaveToCompressedFile(string aFileName)
-        {
-            throw new Exception(
-                "Can't use compressed functions. You need include the SharpZipLib and uncomment the define at the top of SimpleJSON");
-        }
-
-        public string SaveToCompressedBase64()
-        {
-            throw new Exception(
-                "Can't use compressed functions. You need include the SharpZipLib and uncomment the define at the top of SimpleJSON");
-        }
-#endif
-
-        public void SaveToFile(string aFileName)
-        {
-#if USE_FileIO
-            var directoryInfo = (new FileInfo(aFileName)).Directory;
-            if (directoryInfo != null)
-                Directory.CreateDirectory(directoryInfo.FullName);
-            using (var f = File.OpenWrite(aFileName))
-            {
-                SaveToStream(f);
-            }
-#else
-			throw new Exception ("Can't use File IO stuff in webplayer");
-#endif
-        }
-
         public string SaveToBase64()
         {
             using (var stream = new MemoryStream())
@@ -821,68 +718,12 @@ namespace SimpleJSON
             throw new Exception("JSON Deserialize: Unknown tag in stream");
         }
 
-#if USE_SharpZipLib
-		public static JSONNode LoadFromCompressedStream(System.IO.Stream aData)
-		{
-			var zin = new ICSharpCode.SharpZipLib.BZip2.BZip2InputStream(aData);
-			return LoadFromStream(zin);
-		}
-		public static JSONNode LoadFromCompressedFile(string aFileName)
-		{
-#if USE_FileIO
-			using(var F = System.IO.File.OpenRead(aFileName))
-			{
-				return LoadFromCompressedStream(F);
-			}
-#else
-			throw new Exception("Can't use File IO stuff in webplayer");
-#endif
-		}
-		public static JSONNode LoadFromCompressedBase64(string aBase64)
-		{
-			var tmp = System.Convert.FromBase64String(aBase64);
-			var stream = new System.IO.MemoryStream(tmp);
-			stream.Position = 0;
-			return LoadFromCompressedStream(stream);
-		}
-#else
-        public static JSONNode LoadFromCompressedFile(string aFileName)
-        {
-            throw new Exception(
-                "Can't use compressed functions. You need include the SharpZipLib and uncomment the define at the top of SimpleJSON");
-        }
-
-        public static JSONNode LoadFromCompressedStream(Stream aData)
-        {
-            throw new Exception(
-                "Can't use compressed functions. You need include the SharpZipLib and uncomment the define at the top of SimpleJSON");
-        }
-
-        public static JSONNode LoadFromCompressedBase64(string aBase64)
-        {
-            throw new Exception(
-                "Can't use compressed functions. You need include the SharpZipLib and uncomment the define at the top of SimpleJSON");
-        }
-#endif
-
         public static JSONNode LoadFromStream(Stream aData)
         {
             using (var r = new BinaryReader(aData))
             {
                 return Deserialize(r);
             }
-        }
-
-        public static JSONNode LoadFromFile(string aFileName)
-        {
-#if USE_FileIO
-            using (var f = File.OpenRead(aFileName))
-            {
-                return LoadFromStream(f);
-            }
-#else
-			throw new Exception ("Can't use File IO stuff in webplayer");
-#endif
         }
 
         public static JSONNode LoadFromBase64(string aBase64)
@@ -904,7 +745,7 @@ namespace SimpleJSON
             get
             {
                 if (aIndex < 0 || aIndex >= _nodeList.Count)
-                    return new JSONLazyCreator(this);
+                    return null;
                 return _nodeList[aIndex];
             }
             set
@@ -918,7 +759,7 @@ namespace SimpleJSON
 
         public override JSONNode this[string aKey]
         {
-            get { return new JSONLazyCreator(this); }
+            get { return null; }
             set { _nodeList.Add(value); }
         }
 
@@ -1012,14 +853,8 @@ namespace SimpleJSON
 
         public override JSONNode this[string aKey]
         {
-            get { return _nodeDict.ContainsKey(aKey) ? _nodeDict[aKey] : new JSONLazyCreator(this, aKey); }
-            set
-            {
-                if (_nodeDict.ContainsKey(aKey))
-                    _nodeDict[aKey] = value;
-                else
-                    _nodeDict.Add(aKey, value);
-            }
+            get { return _nodeDict.TryGetValue(aKey, out JSONNode nd) ? nd : null; }
+            set { _nodeDict[aKey] = value; }
         }
 
         public override int Count
@@ -1237,203 +1072,44 @@ namespace SimpleJSON
 
     // End of JSONData
 
-    internal class JSONLazyCreator : JSONNode
-    {
-        private readonly string _key;
-        private JSONNode _node;
-
-        public JSONLazyCreator(JSONNode aNode)
-        {
-            _node = aNode;
-            _key = null;
-        }
-
-        public JSONLazyCreator(JSONNode aNode, string aKey)
-        {
-            _node = aNode;
-            _key = aKey;
-        }
-
-        public override JSONNode this[int aIndex]
-        {
-            get { return new JSONLazyCreator(this); }
-            set
-            {
-                var tmp = new JSONArray();
-                tmp.Add(value);
-                Set(tmp);
-            }
-        }
-
-        public override JSONNode this[string aKey]
-        {
-            get { return new JSONLazyCreator(this, aKey); }
-            set
-            {
-                var tmp = new JSONClass { { aKey, value } };
-                Set(tmp);
-            }
-        }
-
-        public override int AsInt
-        {
-            get
-            {
-                var tmp = new JSONData(0);
-                Set(tmp);
-                return 0;
-            }
-            set
-            {
-                var tmp = new JSONData(value);
-                Set(tmp);
-            }
-        }
-
-        public override long AsLong
-        {
-            get
-            {
-                var tmp = new JSONData(0L);
-                Set(tmp);
-                return 0L;
-            }
-            set
-            {
-                var tmp = new JSONData(value);
-                Set(tmp);
-            }
-        }
-
-        public override float AsFloat
-        {
-            get
-            {
-                var tmp = new JSONData(0.0f);
-                Set(tmp);
-                return 0.0f;
-            }
-            set
-            {
-                var tmp = new JSONData(value);
-                Set(tmp);
-            }
-        }
-
-        public override double AsDouble
-        {
-            get
-            {
-                var tmp = new JSONData(0.0);
-                Set(tmp);
-                return 0.0;
-            }
-            set
-            {
-                var tmp = new JSONData(value);
-                Set(tmp);
-            }
-        }
-
-        public override bool AsBool
-        {
-            get
-            {
-                var tmp = new JSONData(false);
-                Set(tmp);
-                return false;
-            }
-            set
-            {
-                var tmp = new JSONData(value);
-                Set(tmp);
-            }
-        }
-
-        public override JSONArray AsArray
-        {
-            get
-            {
-                var tmp = new JSONArray();
-                Set(tmp);
-                return tmp;
-            }
-        }
-
-        public override JSONClass AsObject
-        {
-            get
-            {
-                var tmp = new JSONClass();
-                Set(tmp);
-                return tmp;
-            }
-        }
-
-        private void Set(JSONNode aVal)
-        {
-            if (_key == null)
-            {
-                _node.Add(aVal);
-            }
-            else
-            {
-                _node.Add(_key, aVal);
-            }
-            _node = null; // Be GC friendly.
-        }
-
-        public override void Add(JSONNode aItem)
-        {
-            var tmp = new JSONArray();
-            tmp.Add(aItem);
-            Set(tmp);
-        }
-
-        public override void Add(string aKey, JSONNode aItem)
-        {
-            var tmp = new JSONClass { { aKey, aItem } };
-            Set(tmp);
-        }
-
-        public static bool operator ==(JSONLazyCreator a, object b)
-        {
-            return b == null || ReferenceEquals(a, b);
-        }
-
-        public static bool operator !=(JSONLazyCreator a, object b)
-        {
-            return !(a == b);
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj == null || ReferenceEquals(this, obj);
-        }
-
-        public override int GetHashCode()
-        {
-            return base.GetHashCode();
-        }
-
-        public override string ToString()
-        {
-            return "";
-        }
-
-        public override string ToString(string aPrefix)
-        {
-            return "";
-        }
-    }
-
-    // End of JSONLazyCreator
-
     public static class JSON
     {
         public static JSONNode Parse(string jsonString)
         {
             return JSONNode.Parse(jsonString);
         }
+
+        // Deserializes JSON string into a class.
+        // Only shallow (single level) classes supported for now.
+        public static T Deserialize<T>(string sJson)
+            where T : new()
+        {
+            JSONNode nd = JSONNode.Parse(sJson);
+            T obj = new T();
+            int nPropsFound = 0;
+            foreach (var prop in typeof(T).GetProperties())
+            {
+                JSONNode n = nd[prop.Name];
+                if (n == null)
+                    continue;
+
+                nPropsFound++;
+
+                // Null value, leave property as default created by constructor
+                if (n.Tag == JSONBinaryTag.Null)
+                    continue;
+
+                // Nullable type?
+                Type u = Nullable.GetUnderlyingType(prop.PropertyType);
+                prop.SetValue(obj, Convert.ChangeType(n.Value, u ?? prop.PropertyType));
+            }
+
+            // No overlap between json and T
+            if (nPropsFound == 0)
+                throw new Exception($"JSON is not a representation of class {typeof(T).Name}");
+
+            return obj;
+        }
+
     }
 }
